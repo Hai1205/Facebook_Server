@@ -469,7 +469,7 @@ public class UsersApi {
             String gender,
             String dateOfBirth,
             String status,
-            boolean isCelebrity) {
+            boolean celebrity) {
         Response response = new Response();
 
         try {
@@ -517,7 +517,7 @@ public class UsersApi {
                 user.setStatus(User.Status.valueOf(status));
             }
 
-            user.setCelebrity(isCelebrity);
+            user.setCelebrity(celebrity);
 
             User savedUser = userRepository.save(user);
             UserDTO userDTO = UserMapper.mapEntityToDTOFull(savedUser);

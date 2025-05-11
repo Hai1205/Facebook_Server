@@ -25,7 +25,7 @@ public class PostMapper {
                                 post.getShares().stream()
                                                 .filter(Objects::nonNull)
                                                 .toList()));
-                postDTO.setComments(CommentMapper.mapListEntityToListDTO(
+                postDTO.setComments(CommentMapper.mapListEntityToListDTOFull(
                                 post.getComments().stream()
                                                 .filter(Objects::nonNull)
                                                 .toList()));

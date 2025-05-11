@@ -305,13 +305,15 @@ public class PostsApi {
         try {
             Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post Not Found"));
 
-            String imageUrl = post.getMediaUrl();
-            awsS3Config.deleteFileFromS3(imageUrl);
+            String fileUrl = post.getMediaUrl();
+            if(fileUrl != null && !fileUrl.isEmpty()){
+                awsS3Config.deleteFileFromS3(fileUrl);
+            }
 
             postRepository.deleteById(postId);
 
             response.setStatusCode(200);
-            response.setMessage("success");
+            response.setMessage("delete post successfully");
         } catch (OurException e) {
             response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -331,13 +333,13 @@ public class PostsApi {
         try {
             Story story = storyRepository.findById(storyId).orElseThrow(() -> new OurException("Story Not Found"));
 
-            String imageUrl = story.getMediaUrl();
-            awsS3Config.deleteFileFromS3(imageUrl);
+            String fileUrl = story.getMediaUrl();
+            awsS3Config.deleteFileFromS3(fileUrl);
 
             storyRepository.deleteById(storyId);
 
             response.setStatusCode(200);
-            response.setMessage("success");
+            response.setMessage("Story deleted successfully");
         } catch (OurException e) {
             response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -412,6 +414,36 @@ public class PostsApi {
 
             response.setStatusCode(200);
             response.setMessage("Comment added successfully");
+            response.setPost(postDTO);
+        } catch (OurException e) {
+            response.setStatusCode(404);
+            response.setMessage(e.getMessage());
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage(e.getMessage());
+            System.out.println(e.getMessage());
+        }
+
+        return response;
+    }
+    
+    public Response deleteComment(String commentId, String postId) {
+        Response response = new Response();
+
+        try {
+            Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new OurException("Comment not found"));
+            Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post not found"));
+
+            post.getComments().remove(comment);
+            postRepository.save(post);
+
+            commentRepository.deleteById(commentId);
+
+            PostDTO postDTO = PostMapper.mapEntityToDTOFull(post);
+
+            response.setStatusCode(200);
+            response.setMessage("Comment deleted successfully");
             response.setPost(postDTO);
         } catch (OurException e) {
             response.setStatusCode(404);

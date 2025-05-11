@@ -25,6 +25,14 @@ public class UserMapper {
                 if (user.getFriends() != null) {
                         userDTO.setFriends(mapListEntityToListDTO(user.getFriends()));
                 }
+               
+                if (user.getFollowers() != null) {
+                        userDTO.setFollowers(mapListEntityToListDTO(user.getFollowers()));
+                }
+               
+                if (user.getFollowing() != null) {
+                        userDTO.setFollowing(mapListEntityToListDTO(user.getFollowing()));
+                }
 
                 return userDTO;
         }

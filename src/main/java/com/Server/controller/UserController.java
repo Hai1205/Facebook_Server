@@ -162,9 +162,9 @@ public class UserController {
             @RequestParam(value = "gender", required = false) String gender,
             @RequestParam(value = "dateOfBirth", required = false) String dateOfBirth,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "isCelebrity", required = false) boolean isCelebrity) {
+            @RequestParam(value = "celebrity", required = false) boolean celebrity) {
         Response response = usersApi.updateUser(userId, avatarPhoto, coverPhoto, fullName, role, gender, dateOfBirth,
-                status, isCelebrity);
+                status, celebrity);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }

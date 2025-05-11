@@ -57,7 +57,7 @@ public class PostController {
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
-
+    
     @DeleteMapping("/delete-post/{postId}")
     public ResponseEntity<Response> deletePost(@PathVariable("postId") String postId) {
         Response response = postsApi.deletePost(postId);
@@ -87,6 +87,15 @@ public class PostController {
             @PathVariable("userId") String userId,
             @RequestParam("text") String text) {
         Response response = postsApi.commentPost(postId, userId, text);
+
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+    
+    @DeleteMapping("/delete-comment/{commentId}/{postId}")
+    public ResponseEntity<Response> deleteComment(
+            @PathVariable("commentId") String commentId,
+            @PathVariable("postId") String postId) {
+        Response response = postsApi.deleteComment(commentId, postId);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
