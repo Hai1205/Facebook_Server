@@ -23,7 +23,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class AuthApi {
@@ -106,26 +107,25 @@ public class AuthApi {
             User user = userRepository.findByEmail(email).orElseThrow(() -> new OurException("User not found"));
             UserDTO userDTO = UserMapper.mapEntityToDTOFull(user);
 
-            
             String status = user.getStatus().toString();
-            
+
             boolean isLock = status.equals("LOCK");
             if (isLock) {
                 throw new OurException("Account has not been locked");
             }
-            
+
             boolean isActive = status.equals("ACTIVE");
             if (isActive) {
-                System.out.println("hello");
-                authenticationManager
-                        .authenticate(new UsernamePasswordAuthenticationToken(userDetail.getUsername(), password));
+                Authentication auth = new UsernamePasswordAuthenticationToken(userDetail.getUsername(), password);
+                authenticationManager.authenticate(auth);
+
                 var token = jwtUtils.generateToken(userDetail);
 
                 Map<String, String> userInfo = new HashMap<>();
                 userInfo.put("email", user.getEmail());
                 userInfo.put("fullName", user.getFullName());
                 socketIOHandler.logUserLoginAndConnection(user.getId(), userInfo);
-                
+
                 response.setMessage("Login successfully");
                 response.setToken(token);
             }
@@ -239,14 +239,16 @@ public class AuthApi {
                 user = userRepository.save(user);
             }
 
-            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                    user.getEmail(),
-                    user.getPassword(),
-                    Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name())));
+            UserDetails userDetails = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new OurException("User not found"));
 
-            UserDTO userDTO = UserMapper.mapEntityToDTOFull(user);
+            Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null,
+                    userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
             var token = jwtUtils.generateToken(userDetails);
+
+            UserDTO userDTO = UserMapper.mapEntityToDTOFull(user);
 
             Map<String, String> userInfo = new HashMap<>();
             userInfo.put("email", user.getEmail());
@@ -254,7 +256,7 @@ public class AuthApi {
             socketIOHandler.logUserLoginAndConnection(user.getId(), userInfo);
 
             response.setStatusCode(200);
-            response.setMessage("Đăng nhập bằng Google thành công");
+            response.setMessage("Login successfully");
             response.setToken(token);
             response.setUser(userDTO);
             response.setExpirationTime("7 days");

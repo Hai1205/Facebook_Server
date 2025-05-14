@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/", "/api/auth/register", "/api/auth/login", "/api/auth/login-google",
-                                "/api/auth/send-otp/**", "/api/auth/check-otp/**", "/api/posts/get-user-feed/**",
+                                "/api/auth/send-otp/**", "/api/auth/check-otp/**", "/api/auth/forgot-password/**", "/api/posts/get-user-feed/**",
                                 "/api/users/get-user-profile/**", "/ws", "/ws/**")
                         .permitAll()
                         .anyRequest().authenticated())
