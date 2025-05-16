@@ -277,11 +277,21 @@ public class PostsApi {
 
             List<Story> filteredStories = new ArrayList<>();
 
-            if(!relatedUserIds.isEmpty()){
+            if (!relatedUserIds.isEmpty()) {
                 filteredStories = storyRepository.findStoriesByUserIds(relatedUserIds);
             }
 
-            List<StoryDTO> storyDTOList = StoryMapper.mapListEntityToListDTOFull(filteredStories);
+            List<Story> userStories = storyRepository.findByUserInOrderByCreatedAtDesc(List.of(user));
+
+            List<Story> finalStories = new ArrayList<>();
+            finalStories.addAll(userStories);
+            finalStories.addAll(filteredStories);
+
+            List<Story> distinctStories = finalStories.stream()
+                    .distinct()
+                    .toList();
+
+            List<StoryDTO> storyDTOList = StoryMapper.mapListEntityToListDTOFull(distinctStories);
 
             response.setStatusCode(200);
             response.setMessage("Get user story feed successfully");
@@ -306,7 +316,7 @@ public class PostsApi {
             Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post Not Found"));
 
             String fileUrl = post.getMediaUrl();
-            if(fileUrl != null && !fileUrl.isEmpty()){
+            if (fileUrl != null && !fileUrl.isEmpty()) {
                 awsS3Config.deleteFileFromS3(fileUrl);
             }
 
@@ -427,12 +437,13 @@ public class PostsApi {
 
         return response;
     }
-    
+
     public Response deleteComment(String commentId, String postId) {
         Response response = new Response();
 
         try {
-            Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new OurException("Comment not found"));
+            Comment comment = commentRepository.findById(commentId)
+                    .orElseThrow(() -> new OurException("Comment not found"));
             Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post not found"));
 
             post.getComments().remove(comment);
