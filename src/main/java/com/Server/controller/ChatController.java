@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import com.Server.dto.Response;
 import com.Server.exception.OurException;
 import com.Server.service.api.ChatApi;
-import com.Server.service.api.GeminiChatApi;
 import com.Server.handler.SocketIOHandler;
 
 import java.util.List;
@@ -18,9 +17,6 @@ import java.util.Map;
 public class ChatController {
     @Autowired
     private ChatApi chatApi;
-
-    @Autowired
-    private GeminiChatApi geminiChatApi;
 
     @Autowired
     private SocketIOHandler socketIOHandler;
@@ -142,10 +138,5 @@ public class ChatController {
         Response response = chatApi.deleteUserFromGroup(conversationId, userId);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    @PostMapping("/chat-ai")
-    public String sendMessage(@RequestBody String prompt) throws Exception {
-        return geminiChatApi.getGeminiResponse(prompt);
     }
 }

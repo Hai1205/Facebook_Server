@@ -15,7 +15,7 @@ public class UserMapper {
                 }
 
                 if (user.getPosts() != null) {
-                        userDTO.setPosts(PostMapper.mapListEntityToListDTO(user.getPosts()));
+                        userDTO.setPosts(PostMapper.mapListEntityToListDTOFull(user.getPosts()));
                 }
 
                 if (user.getStories() != null) {
