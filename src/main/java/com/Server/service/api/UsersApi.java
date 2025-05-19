@@ -629,32 +629,51 @@ public class UsersApi {
             List<User> users = userRepository.findAll();
 
             if (gender != null && !gender.isEmpty()) {
+                String[] genderValues = gender.split(",");
                 users = users.stream()
-                        .filter(user -> user.getGender().toString().equals(gender))
+                        .filter(user -> {
+                            for (String genderValue : genderValues) {
+                                if (user.getGender().toString().equals(genderValue.trim())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
             if (status != null && !status.isEmpty()) {
+                String[] statusValues = status.split(",");
                 users = users.stream()
-                        .filter(user -> user.getStatus().equals(User.Status.valueOf(status)))
+                        .filter(user -> {
+                            for (String statusValue : statusValues) {
+                                if (user.getStatus().equals(User.Status.valueOf(statusValue.trim()))) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
             if (role != null && !role.isEmpty()) {
+                String[] roleValues = role.split(",");
                 users = users.stream()
-                        .filter(user -> user.getRole().equals(User.Role.valueOf(role)))
+                        .filter(user -> {
+                            for (String roleValue : roleValues) {
+                                if (user.getRole().equals(User.Role.valueOf(roleValue.trim()))) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
             if (query != null && !query.isEmpty()) {
                 users = users.stream()
-                        .filter(user -> user.getEmail().contains(query))
-                        .collect(Collectors.toList());
-            }
-
-            if (query != null && !query.isEmpty()) {
-                users = users.stream()
-                        .filter(user -> user.getFullName() != null && user.getFullName().contains(query))
+                        .filter(user -> (user.getEmail() != null && user.getEmail().contains(query)) ||
+                                (user.getFullName() != null && user.getFullName().contains(query)))
                         .collect(Collectors.toList());
             }
 

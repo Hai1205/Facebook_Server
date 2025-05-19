@@ -269,16 +269,20 @@ public class AuthApi {
         return response;
     }
 
-    public Response changePassword(String userId, String oldPassword, String newPassword) {
+    public Response changePassword(String userId, String currentPassword, String newPassword, String rePassword) {
         Response response = new Response();
 
         try {
+            if (!newPassword.equals(rePassword)) {
+                throw new OurException("Password does not match.");
+            }
+
             User user = userRepository.findById(userId).orElseThrow(() -> new OurException("User not found"));
 
             UserDetails userDetail = userRepository.findByUsername(user.getUsername())
                     .orElseThrow(() -> new OurException("User not found"));
             authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(userDetail.getUsername(), oldPassword));
+                    .authenticate(new UsernamePasswordAuthenticationToken(userDetail.getUsername(), currentPassword));
 
             user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(user);

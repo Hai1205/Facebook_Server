@@ -14,6 +14,8 @@ public class NotiDTO {
 
     private UserDTO to;
 
+    private PostDTO post;
+
     private String type;
 
     private boolean read;

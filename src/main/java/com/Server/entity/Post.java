@@ -24,16 +24,16 @@ public class Post {
 
     private String content;
 
-    private String mediaUrl;
+    private List<String> mediaUrls = new ArrayList<>();
 
     private int reportCount = 0;
 
     @Field(targetType = FieldType.STRING)
-    private MediaType mediaType;
+    private List<MediaType> mediaTypes = new ArrayList<>();
 
     @Field(targetType = FieldType.STRING)
     private Privacy privacy = Privacy.PUBLIC;
-    
+
     @Field(targetType = FieldType.STRING)
     private User.Status status = User.Status.ACTIVE;
 
@@ -57,8 +57,8 @@ public class Post {
                 "id='" + id + '\'' +
                 ", user=" + user +
                 ", content='" + content + '\'' +
-                ", mediaUrl='" + mediaUrl + '\'' +
-                ", mediaType=" + mediaType +
+                ", mediaUrls=" + mediaUrls + '\'' +
+                ", mediaTypes=" + mediaTypes + '\'' +
                 ", status='" + status + '\'' +
                 ", likes=" + likes + '\'' +
                 ", comments=" + comments + '\'' +

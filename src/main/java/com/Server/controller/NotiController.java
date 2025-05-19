@@ -46,4 +46,18 @@ public class NotiController {
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
+
+    @PutMapping("/mark-read/{notiId}")
+    public ResponseEntity<Response> markRead(@PathVariable("notiId") String notiId) {
+        Response response = notiApi.markRead(notiId);
+
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @PutMapping("/mark-all-read/{userId}")
+    public ResponseEntity<Response> markAllRead(@PathVariable("userId") String userId) {
+        Response response = notiApi.markAllRead(userId);
+
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 }

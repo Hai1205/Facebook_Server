@@ -15,6 +15,9 @@ public class NotiMapper {
         if (noti.getTo() != null) {
             notiDTO.setTo(UserMapper.mapEntityToDTO(noti.getTo()));
         }
+        if (noti.getPost() != null) {
+            notiDTO.setPost(PostMapper.mapEntityToDTO(noti.getPost()));
+        }
 
         return notiDTO;
     }

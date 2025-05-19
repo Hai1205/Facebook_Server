@@ -50,13 +50,18 @@ public class PostMapper {
 
                 postDTO.setId(post.getId());
                 postDTO.setContent(post.getContent());
-                if (post.getMediaUrl() != null) {
-                        postDTO.setMediaUrl(post.getMediaUrl());
-                        postDTO.setMediaType(post.getMediaType().toString());
+
+                if (post.getMediaUrls() != null && !post.getMediaUrls().isEmpty()) {
+                        postDTO.setMediaUrls(post.getMediaUrls());
+                        postDTO.setMediaTypes(post.getMediaTypes());
                 }
-                postDTO.setPrivacy(post.getPrivacy().toString());
-                postDTO.setStatus(post.getStatus().toString());
+
+                postDTO.setPrivacy(post.getPrivacy());
+                postDTO.setStatus(post.getStatus());
                 postDTO.setReportCount(post.getReportCount());
+                postDTO.setLikeCount(post.getLikes().size());
+                postDTO.setCommentCount(post.getComments().size());
+                postDTO.setShareCount(post.getShares().size());
                 postDTO.setCreatedAt(post.getCreatedAt());
                 postDTO.setUpdatedAt(post.getUpdatedAt());
 

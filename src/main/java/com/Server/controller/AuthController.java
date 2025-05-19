@@ -95,9 +95,11 @@ public class AuthController {
     @PutMapping("/change-password/{userId}")
     public ResponseEntity<Response> changePassword(
             @PathVariable("userId") String userId,
-            @RequestParam("oldPassword") String oldPassword,
-            @RequestParam("newPassword") String newPassword) {
-        Response response = authApi.changePassword(userId, oldPassword, newPassword);
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("rePassword") String rePassword
+            ) {
+        Response response = authApi.changePassword(userId, currentPassword, newPassword, rePassword);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }

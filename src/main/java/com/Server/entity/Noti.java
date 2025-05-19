@@ -14,10 +14,20 @@ import java.time.Instant;
 @Data
 @Document(collection = "notifications")
 public class Noti {
+    public Noti() {
+    }
+
     public Noti(TYPE type, User from, User to) {
         this.type = type;
         this.from = from;
         this.to = to;
+    }
+
+    public Noti(TYPE type, User from, User to, Post post) {
+        this.type = type;
+        this.from = from;
+        this.to = to;
+        this.post = post;
     }
 
     @Id
@@ -28,6 +38,9 @@ public class Noti {
 
     @DBRef
     private User to;
+
+    @DBRef
+    private Post post;
 
     @Field(targetType = FieldType.STRING)
     private TYPE type;
@@ -46,6 +59,7 @@ public class Noti {
                 "id='" + id + '\'' +
                 ", from=" + from + '\'' +
                 ", to=" + to + '\'' +
+                ", post=" + post + '\'' +
                 ", type=" + type + '\'' +
                 ", read=" + read + '\'' +
                 ", createdAt=" + createdAt + '\'' +

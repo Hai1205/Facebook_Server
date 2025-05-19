@@ -2,6 +2,9 @@ package com.Server.controller;
 
 import com.Server.dto.Response;
 import com.Server.service.api.PostsApi;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,14 +39,21 @@ public class PostController {
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
+    
+    @GetMapping("/get-post/{postId}")
+    public ResponseEntity<Response> getPost(@PathVariable("postId") String postId) {
+        Response response = postsApi.getPost(postId);
+
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
     @PostMapping("/create-post/{userId}")
     public ResponseEntity<Response> createPost(
             @PathVariable("userId") String userId,
-            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
             @RequestParam("content") String content,
             @RequestParam("privacy") String privacy) {
-        Response response = postsApi.createPost(userId, file, content, privacy);
+        Response response = postsApi.createPost(userId, files, content, privacy);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
@@ -57,7 +67,7 @@ public class PostController {
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
-    
+
     @DeleteMapping("/delete-post/{postId}")
     public ResponseEntity<Response> deletePost(@PathVariable("postId") String postId) {
         Response response = postsApi.deletePost(postId);
@@ -90,7 +100,7 @@ public class PostController {
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
-    
+
     @DeleteMapping("/delete-comment/{commentId}/{postId}")
     public ResponseEntity<Response> deleteComment(
             @PathVariable("commentId") String commentId,
@@ -135,10 +145,10 @@ public class PostController {
     @PutMapping("/update-post/{postId}")
     public ResponseEntity<Response> updatePost(
             @PathVariable("postId") String postId,
-            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "file", required = false) List<MultipartFile> files,
             @RequestParam("content") String content,
             @RequestParam("privacy") String privacy) {
-        Response response = postsApi.updatePost(postId, file, content, privacy);
+        Response response = postsApi.updatePost(postId, files, content, privacy);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
@@ -146,18 +156,17 @@ public class PostController {
     @GetMapping("/search-posts")
     public ResponseEntity<Response> searchPosts(
             @RequestParam(name = "content", required = false) String content,
-            @RequestParam(name = "mediaType", required = false) String mediaType,
             @RequestParam(name = "status", required = false) String status,
             @RequestParam(name = "privacy", required = false) String privacy) {
-        Response response = postsApi.searchPosts(content, mediaType, status, privacy);
+        Response response = postsApi.searchPosts(content, status, privacy);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @GetMapping("/search-reports")
     public ResponseEntity<Response> searchReports(
-            @RequestParam(name = "contentType", required = false) String contentType,
             @RequestParam(name = "reason", required = false) String reason,
+            @RequestParam(name = "contentType", required = false) String contentType,
             @RequestParam(name = "status", required = false) String status) {
         Response response = postsApi.searchReports(contentType, reason, status);
 

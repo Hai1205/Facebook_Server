@@ -42,7 +42,7 @@ public class PostsApi {
     @Autowired
     private AwsS3Config awsS3Config;
 
-    public Response createPost(String userId, MultipartFile file, String content, String privacy) {
+    public Response createPost(String userId, List<MultipartFile> files, String content, String privacy) {
         Response response = new Response();
 
         try {
@@ -53,12 +53,23 @@ public class PostsApi {
             post.setContent(content);
             post.setPrivacy(Post.Privacy.valueOf(privacy));
 
-            if (file != null && !file.isEmpty()) {
-                String mediaUrl = awsS3Config.saveFileToS3(file);
-                Post.MediaType mediaType = file.getContentType().startsWith("video") ? Post.MediaType.VIDEO
-                        : Post.MediaType.IMAGE;
-                post.setMediaUrl(mediaUrl);
-                post.setMediaType(mediaType);
+            if (files != null && !files.isEmpty()) {
+                List<String> mediaUrls = new ArrayList<>();
+                List<Post.MediaType> mediaTypes = new ArrayList<>();
+
+                for (MultipartFile file : files) {
+                    if (file != null && !file.isEmpty()) {
+                        String mediaUrl = awsS3Config.saveFileToS3(file);
+                        Post.MediaType mediaType = file.getContentType().startsWith("video") ? Post.MediaType.VIDEO
+                                : Post.MediaType.IMAGE;
+
+                        mediaUrls.add(mediaUrl);
+                        mediaTypes.add(mediaType);
+                    }
+                }
+
+                post.setMediaUrls(mediaUrls);
+                post.setMediaTypes(mediaTypes);
             }
 
             Post savedPost = postRepository.save(post);
@@ -174,6 +185,25 @@ public class PostsApi {
             response.setStatusCode(200);
             response.setMessage("Get all post successfully");
             response.setPosts(postDTOList);
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage(e.getMessage());
+            System.out.println(e.getMessage());
+        }
+
+        return response;
+    }
+
+    public Response getPost(String postId) {
+        Response response = new Response();
+
+        try {
+            Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post not found"));
+            PostDTO postDTO = PostMapper.mapEntityToDTOFull(post);
+
+            response.setStatusCode(200);
+            response.setMessage("Get post successfully");
+            response.setPost(postDTO);
         } catch (Exception e) {
             response.setStatusCode(500);
             response.setMessage(e.getMessage());
@@ -315,9 +345,8 @@ public class PostsApi {
         try {
             Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post Not Found"));
 
-            String fileUrl = post.getMediaUrl();
-            if (fileUrl != null && !fileUrl.isEmpty()) {
-                awsS3Config.deleteFileFromS3(fileUrl);
+            for (String mediaUrl : post.getMediaUrls()) {
+                awsS3Config.deleteFileFromS3(mediaUrl);
             }
 
             postRepository.deleteById(postId);
@@ -367,8 +396,6 @@ public class PostsApi {
         Response response = new Response();
 
         try {
-            System.out.println("postId: " + postId);
-            System.out.println("userId: " + userId);
             Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post not found"));
             User user = userRepository.findById(userId).orElseThrow(() -> new OurException("User not found"));
 
@@ -379,7 +406,7 @@ public class PostsApi {
             } else {
                 post.getLikes().add(user);
 
-                Noti notification = new Noti(Noti.TYPE.LIKE, user, post.getUser());
+                Noti notification = new Noti(Noti.TYPE.LIKE, user, post.getUser(), post);
                 notiRepository.save(notification);
             }
 
@@ -416,8 +443,10 @@ public class PostsApi {
 
             post.getComments().add(saveComment);
 
-            Noti notification = new Noti(Noti.TYPE.COMMENT, user, post.getUser());
-            notiRepository.save(notification);
+            if (!userId.equals(post.getUser().getId())) {
+                Noti notification = new Noti(Noti.TYPE.COMMENT, user, post.getUser(), post);
+                notiRepository.save(notification);
+            }
 
             Post updatedPost = postRepository.save(post);
             PostDTO postDTO = PostMapper.mapEntityToDTOFull(updatedPost);
@@ -495,20 +524,46 @@ public class PostsApi {
         return response;
     }
 
-    public Response updatePost(String postId, MultipartFile file, String content, String privacy) {
+    public Response updatePost(String postId, List<MultipartFile> files, String content, String privacy) {
         Response response = new Response();
 
         try {
             Post post = postRepository.findById(postId).orElseThrow(() -> new OurException("Post not found"));
 
-            if (file != null && !file.isEmpty()) {
-                String mediaUrl = post.getMediaUrl();
-                if (mediaUrl != null &&
-                        !mediaUrl.isEmpty())
-                    awsS3Config.deleteFileFromS3(mediaUrl);
+            if (files != null && !files.isEmpty()) {
+                if (post.getMediaUrls() != null && !post.getMediaUrls().isEmpty()) {
+                    awsS3Config.deleteFileFromS3(post.getMediaUrls().get(0));
+                }
 
-                mediaUrl = awsS3Config.saveFileToS3(file);
-                post.setMediaUrl(mediaUrl);
+                if (post.getMediaUrls() != null && !post.getMediaUrls().isEmpty()) {
+                    for (String mediaUrl : post.getMediaUrls()) {
+                        if (!mediaUrl.equals(post.getMediaUrls().get(0))) {
+                            awsS3Config.deleteFileFromS3(mediaUrl);
+                        }
+                    }
+                }
+
+                List<String> mediaUrls = new ArrayList<>();
+                List<Post.MediaType> mediaTypes = new ArrayList<>();
+
+                for (MultipartFile file : files) {
+                    if (file != null && !file.isEmpty()) {
+                        String mediaUrl = awsS3Config.saveFileToS3(file);
+                        Post.MediaType mediaType = file.getContentType().startsWith("video") ? Post.MediaType.VIDEO
+                                : Post.MediaType.IMAGE;
+
+                        mediaUrls.add(mediaUrl);
+                        mediaTypes.add(mediaType);
+                    }
+                }
+
+                if (!mediaUrls.isEmpty()) {
+                    post.setMediaUrls(mediaUrls);
+                    post.setMediaTypes(mediaTypes);
+                }
+
+                post.setMediaUrls(mediaUrls);
+                post.setMediaTypes(mediaTypes);
             }
 
             post.setContent(content);
@@ -533,33 +588,43 @@ public class PostsApi {
         return response;
     }
 
-    public Response searchPosts(String content, String mediaType, String status, String privacy) {
+    public Response searchPosts(String content, String status, String privacy) {
         Response response = new Response();
 
         try {
             List<Post> posts = postRepository.findAll();
 
-            if (privacy != null && !privacy.isEmpty()) {
+            if (content != null && !content.isEmpty()) {
                 posts = posts.stream()
-                        .filter(post -> post.getPrivacy().toString().equals(privacy))
+                        .filter(post -> post.getContent().contains(content))
                         .collect(Collectors.toList());
             }
 
-            if (mediaType != null && !mediaType.isEmpty()) {
+            if (privacy != null && !privacy.isEmpty()) {
+                String[] privacyValues = privacy.split(",");
                 posts = posts.stream()
-                        .filter(user -> user.getMediaType().toString().equals(mediaType))
+                        .filter(post -> {
+                            for (String privacyValue : privacyValues) {
+                                if (post.getPrivacy().toString().equals(privacyValue.trim())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
             if (status != null && !status.isEmpty()) {
+                String[] statusValues = status.split(",");
                 posts = posts.stream()
-                        .filter(user -> user.getStatus().toString().equals(status))
-                        .collect(Collectors.toList());
-            }
-
-            if (content != null && !content.isEmpty()) {
-                posts = posts.stream()
-                        .filter(post -> post.getContent().contains(content))
+                        .filter(post -> {
+                            for (String statusValue : statusValues) {
+                                if (post.getStatus().toString().equals(statusValue.trim())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
@@ -583,21 +648,37 @@ public class PostsApi {
         try {
             List<Report> reports = reportRepository.findAll();
 
-            if (contentType != null && !contentType.isEmpty()) {
+            if (reason != null && !reason.isEmpty()) {
                 reports = reports.stream()
-                        .filter(report -> report.getContentType().toString().equals(contentType))
+                        .filter(report -> report.getReason().contains(reason))
+                        .collect(Collectors.toList());
+            }
+
+            if (contentType != null && !contentType.isEmpty()) {
+                String[] contentTypeValues = contentType.split(",");
+                reports = reports.stream()
+                        .filter(report -> {
+                            for (String contentTypeValue : contentTypeValues) {
+                                if (report.getContentType().toString().equals(contentTypeValue.trim())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
             if (status != null && !status.isEmpty()) {
+                String[] statusValues = status.split(",");
                 reports = reports.stream()
-                        .filter(report -> report.getStatus().toString().equals(status))
-                        .collect(Collectors.toList());
-            }
-
-            if (reason != null && !reason.isEmpty()) {
-                reports = reports.stream()
-                        .filter(report -> report.getReason().contains(reason))
+                        .filter(report -> {
+                            for (String statusValue : statusValues) {
+                                if (report.getStatus().toString().equals(statusValue.trim())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
                         .collect(Collectors.toList());
             }
 
