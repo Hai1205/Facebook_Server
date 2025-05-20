@@ -365,7 +365,7 @@ public class UsersApi {
         return response;
     }
 
-    public Response responseFriendRequest(String currentUserId, String opponentId, String status) {
+    public Response respondFriendRequest(String currentUserId, String opponentId, String status) {
         Response response = new Response();
 
         try {
@@ -571,12 +571,16 @@ public class UsersApi {
         return response;
     }
 
-    public Response createUser(String email, String password, String gender, String dateOfBirth, String role) {
+    public Response createUser(String email, String fullName, String password, String gender, String dateOfBirth, String role) {
         Response response = new Response();
 
         try {
             if (userRepository.existsByEmail(email)) {
                 throw new OurException("Email Already Exists");
+            }
+
+            if (fullName == null || fullName.isEmpty()) {
+                throw new OurException("Full name is required");
             }
 
             if (gender == null || gender.isEmpty()) {
@@ -596,7 +600,7 @@ public class UsersApi {
             LocalDate localDateOfBirth = LocalDate.parse(dateOfBirth);
             Date dateOfBirthObj = Date.valueOf(localDateOfBirth);
 
-            User user = new User(email, User.Gender.valueOf(gender), dateOfBirthObj, userRole);
+            User user = new User(email, fullName, User.Gender.valueOf(gender), dateOfBirthObj, userRole);
             user.setPassword(passwordEncoder.encode(password));
 
             Bio bio = new Bio();

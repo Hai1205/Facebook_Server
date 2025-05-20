@@ -84,11 +84,12 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> createUser(
             @RequestParam("email") String email,
+            @RequestParam("fullName") String fullName,
             @RequestParam("password") String password,
             @RequestParam("gender") String gender,
             @RequestParam("dateOfBirth") String dateOfBirth,
             @RequestParam("role") String role) {
-        Response response = usersApi.createUser(email, password, gender, dateOfBirth, role);
+        Response response = usersApi.createUser(email, fullName, password, gender, dateOfBirth, role);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
@@ -127,12 +128,12 @@ public class UserController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @PostMapping("/response-friend-request/{currentUserId}/{opponentId}")
-    public ResponseEntity<Response> responseFriendRequest(
+    @PostMapping("/respond-friend-request/{currentUserId}/{opponentId}")
+    public ResponseEntity<Response> respondFriendRequest(
             @PathVariable("currentUserId") String currentUserId,
             @PathVariable("opponentId") String opponentId,
             @RequestParam("status") String status) {
-        Response response = usersApi.responseFriendRequest(currentUserId, opponentId, status);
+        Response response = usersApi.respondFriendRequest(currentUserId, opponentId, status);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }

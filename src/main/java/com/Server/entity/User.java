@@ -54,8 +54,9 @@ public class User implements UserDetails {
         this.status = status;
     }
 
-    public User(String email, Gender gender, Date dateOfBirth, Role role) {
+    public User(String email, String fullName, Gender gender, Date dateOfBirth, Role role) {
         this.username = getUsernameByEmail(email);
+        this.fullName = fullName;
         this.email = email;
         this.gender = gender;
         this.dateOfBirth = dateOfBirth;
