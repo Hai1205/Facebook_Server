@@ -31,13 +31,33 @@ public class BioApi {
             User user = userRepository.findById(userId).orElseThrow(() -> new OurException("User Not Found"));
             Bio bio = bioRepository.findById(user.getBio().getId()).orElseThrow(() -> new OurException("User bio Not Found"));
 
-            bio.setBioText(bioText);
-            bio.setLiveIn(liveIn);
-            bio.setRelationship(relationship);
-            bio.setWorkplace(workplace);
-            bio.setEducation(education);
-            bio.setPhone(phone);
-            bio.setHometown(hometown);
+            if (bioText != null && !bioText.isEmpty() && !bioText.equals(bio.getBioText())) {   
+                bio.setBioText(bioText);
+            }
+
+            if (liveIn != null && !liveIn.isEmpty() && !liveIn.equals(bio.getLiveIn())) {
+                bio.setLiveIn(liveIn);
+            }
+
+            if (relationship != null && !relationship.isEmpty() && !relationship.equals(bio.getRelationship())) {
+                bio.setRelationship(relationship);
+            }
+
+            if (workplace != null && !workplace.isEmpty() && !workplace.equals(bio.getWorkplace())) {
+                bio.setWorkplace(workplace);
+            }
+
+            if (education != null && !education.isEmpty() && !education.equals(bio.getEducation())) {
+                bio.setEducation(education);
+            }
+
+            if (phone != null && !phone.isEmpty() && !phone.equals(bio.getPhone())) {
+                bio.setPhone(phone);
+            }
+
+            if (hometown != null && !hometown.isEmpty() && !hometown.equals(bio.getHometown())) {
+                bio.setHometown(hometown);
+            }
 
             bioRepository.save(bio);
             UserDTO userDTO = UserMapper.mapEntityToDTOFull(user);

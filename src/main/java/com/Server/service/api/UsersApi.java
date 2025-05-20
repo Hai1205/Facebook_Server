@@ -495,29 +495,31 @@ public class UsersApi {
                 user.setCoverPhotoUrl(coverPhotoUrl);
             }
 
-            if (fullName != null && !fullName.isEmpty()) {
+            if (fullName != null && !fullName.isEmpty() && !fullName.equals(user.getFullName())) {
                 user.setFullName(fullName);
             }
 
-            if (dateOfBirth != null && !dateOfBirth.isEmpty()) {
+            if (dateOfBirth != null && !dateOfBirth.isEmpty() && !dateOfBirth.equals(user.getDateOfBirth().toString())) {
                 LocalDate localDateOfBirth = LocalDate.parse(dateOfBirth);
                 Date dateOfBirthObj = Date.valueOf(localDateOfBirth);
                 user.setDateOfBirth(dateOfBirthObj);
             }
 
-            if (role != null && !role.isEmpty()) {
+            if (role != null && !role.isEmpty() && !role.equals(user.getRole().toString())) {
                 user.setRole(User.Role.valueOf(role));
             }
 
-            if (gender != null && !gender.isEmpty()) {
+            if (gender != null && !gender.isEmpty() && !gender.equals(user.getGender().toString())) {
                 user.setGender(User.Gender.valueOf(gender));
             }
 
-            if (status != null && !status.isEmpty()) {
+            if (status != null && !status.isEmpty() && !status.equals(user.getStatus().toString())) {
                 user.setStatus(User.Status.valueOf(status));
             }
 
-            user.setCelebrity(celebrity);
+            if (celebrity != user.isCelebrity()) {
+                user.setCelebrity(celebrity);
+            }
 
             User savedUser = userRepository.save(user);
             UserDTO userDTO = UserMapper.mapEntityToDTOFull(savedUser);

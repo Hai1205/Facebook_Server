@@ -566,8 +566,13 @@ public class PostsApi {
                 post.setMediaTypes(mediaTypes);
             }
 
-            post.setContent(content);
-            post.setPrivacy(Post.Privacy.valueOf(privacy));
+            if (content != null && !content.isEmpty() && !content.equals(post.getContent())) {
+                post.setContent(content);
+            }
+
+            if (privacy != null && !privacy.isEmpty() && !privacy.equals(post.getPrivacy().toString())) {
+                post.setPrivacy(Post.Privacy.valueOf(privacy));
+            }
 
             Post updatedPost = postRepository.save(post);
             PostDTO postDTO = PostMapper.mapEntityToDTOFull(updatedPost);
