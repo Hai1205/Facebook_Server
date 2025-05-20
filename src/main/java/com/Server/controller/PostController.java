@@ -57,6 +57,17 @@ public class PostController {
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
+    
+    @PutMapping("/update-post/{postId}")
+    public ResponseEntity<Response> updatePost(
+            @PathVariable("postId") String postId,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam("content") String content,
+            @RequestParam("privacy") String privacy) {
+        Response response = postsApi.updatePost(postId, files, content, privacy);
+
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
     @PostMapping("/create-story/{userId}")
     public ResponseEntity<Response> createStory(
@@ -138,17 +149,6 @@ public class PostController {
     public ResponseEntity<Response> getUserStoryFeed(
             @PathVariable("userId") String userId) {
         Response response = postsApi.getUserStoryFeed(userId);
-
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    @PutMapping("/update-post/{postId}")
-    public ResponseEntity<Response> updatePost(
-            @PathVariable("postId") String postId,
-            @RequestParam(value = "file", required = false) List<MultipartFile> files,
-            @RequestParam("content") String content,
-            @RequestParam("privacy") String privacy) {
-        Response response = postsApi.updatePost(postId, files, content, privacy);
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
