@@ -8,13 +8,8 @@ import com.Server.entity.Conversation;
 
 public class ConservationMapper {
     public static ConversationDTO mapEntityToDTOFull(Conversation conversation) {
-        ConversationDTO participantDTO = new ConversationDTO();
-        participantDTO.setId(conversation.getId());
-        participantDTO.setName(conversation.getName());
-        participantDTO.setIsGroupChat(conversation.getIsGroupChat());
-        participantDTO.setCreatedAt(conversation.getCreatedAt());
-        participantDTO.setUpdatedAt(conversation.getUpdatedAt());
-        participantDTO.setUnreadCount(conversation.getUnreadCount());
+        ConversationDTO participantDTO = mapEntityToDTO(conversation);
+        participantDTO.setLastMessage(MessageMapper.mapEntityToResponseDTOFull(conversation.getLastMessage()));
 
         participantDTO.setParticipants(ParticipantMapper.mapListEntityToListDTOFull(conversation.getParticipants()));
 

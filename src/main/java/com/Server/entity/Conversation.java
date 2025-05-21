@@ -26,6 +26,9 @@ public class Conversation {
     @DBRef
     private List<Participant> participants;
 
+    @DBRef
+    private Message lastMessage;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -41,6 +44,7 @@ public class Conversation {
                 ", name='" + name + '\'' +
                 ", isGroupChat=" + isGroupChat +
                 ", participants size=" + (participants != null ? participants.size() : 0) +
+                ", lastMessage=" + (lastMessage != null ? lastMessage.getId() : null) +
                 ", unreadCount=" + unreadCount +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +

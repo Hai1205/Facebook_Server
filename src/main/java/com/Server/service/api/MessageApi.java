@@ -98,6 +98,7 @@ public class MessageApi {
                         log.info("Message saved: {}", savedMessage);
 
                         conversation.setUpdatedAt(savedMessage.getCreatedAt());
+                        conversation.setLastMessage(savedMessage);
                         conversationRepository.save(conversation);
 
                         MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
@@ -362,6 +363,7 @@ public class MessageApi {
 
                         Message savedMessage = messageRepository.save(message);
                         conversation.setUpdatedAt(savedMessage.getCreatedAt());
+                        conversation.setLastMessage(savedMessage);
                         conversationRepository.save(conversation);
 
                         MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
@@ -423,6 +425,7 @@ public class MessageApi {
 
                         Message savedMessage = messageRepository.save(message);
                         conversation.setUpdatedAt(savedMessage.getCreatedAt());
+                        conversation.setLastMessage(savedMessage);
                         conversationRepository.save(conversation);
 
                         MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
