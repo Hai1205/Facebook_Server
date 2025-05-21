@@ -31,7 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/queue", "/user")
-                .setHeartbeatValue(new long[] { 10000, 10000 }) // Cấu hình heartbeat để giữ kết nối
+                .setHeartbeatValue(new long[] { 10000, 10000 })
                 .setTaskScheduler(this.webSocketHeartbeatTaskScheduler());
         registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
@@ -45,7 +45,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setWebSocketEnabled(true)
                 .setSessionCookieNeeded(false);
 
-        // Thêm endpoint không dùng SockJS cho các client khác
         registry.addEndpoint("/ws")
                 .setAllowedOrigins(clientUrl);
     }
@@ -60,18 +59,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
-            // Có thể thêm các interceptor xử lý header hoặc lưu thông tin người dùng vào
-            // session
         });
 
-        // Cấu hình số luồng xử lý tin nhắn đến
         registration.taskExecutor().corePoolSize(4);
         registration.taskExecutor().maxPoolSize(10);
     }
 
     @Override
     public void configureClientOutboundChannel(ChannelRegistration registration) {
-        // Cấu hình số luồng xử lý tin nhắn đi
         registration.taskExecutor().corePoolSize(4);
         registration.taskExecutor().maxPoolSize(10);
     }

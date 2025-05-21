@@ -1,8 +1,5 @@
-package com.Server.service.config;
+package com.Server.service.instant;
 
-import com.Server.entity.User;
-import com.Server.repo.UserRepository;
-import com.Server.utils.OnlineUserTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +11,6 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.util.Map;
-import java.util.Optional;
 
 @Component
 public class WebSocketEventListener {
@@ -26,9 +22,6 @@ public class WebSocketEventListener {
 
     @Autowired
     private OnlineUserTracker onlineUserTracker;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -46,8 +39,7 @@ public class WebSocketEventListener {
                 onlineUserTracker.addUser(userId);
                 broadcastUserStatus(userId, true);
 
-                // Cập nhật trạng thái online trong cơ sở dữ liệu (tùy chọn)
-                updateUserOnlineStatus(userId, true);
+                // updateUserOnlineStatus(userId, true);
             } else {
                 log.debug("Connected user without userId in session attributes");
             }
@@ -72,8 +64,7 @@ public class WebSocketEventListener {
                 onlineUserTracker.removeUser(userId);
                 broadcastUserStatus(userId, false);
 
-                // Cập nhật trạng thái offline trong cơ sở dữ liệu (tùy chọn)
-                updateUserOnlineStatus(userId, false);
+                // updateUserOnlineStatus(userId, false);
             } else {
                 log.debug("Disconnected user without userId in session attributes");
             }
@@ -106,20 +97,13 @@ public class WebSocketEventListener {
         }
     }
 
-    private void updateUserOnlineStatus(String userId, boolean online) {
-        try {
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                // Cập nhật trạng thái online và lastSeen nếu cần
-                // user.setOnline(online);
-                // if (!online) {
-                // user.setLastSeen(new Date());
-                // }
-                // userRepository.save(user);
-            }
-        } catch (Exception e) {
-            log.error("Error updating user online status in database", e);
-        }
-    }
+    // private void updateUserOnlineStatus(String userId, boolean online) {
+    //     try {
+    //         Optional<User> userOpt = userRepository.findById(userId);
+    //         if (userOpt.isPresent()) {
+    //         }
+    //     } catch (Exception e) {
+    //         log.error("Error updating user online status in database", e);
+    //     }
+    // }
 }

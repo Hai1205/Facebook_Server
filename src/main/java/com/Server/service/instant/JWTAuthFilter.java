@@ -1,4 +1,4 @@
-package com.Server.security;
+package com.Server.service.instant;
 
 import com.Server.service.CustomUserDetailsService;
 import com.Server.utils.JWTUtils;

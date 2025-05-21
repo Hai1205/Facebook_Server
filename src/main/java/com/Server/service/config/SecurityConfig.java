@@ -1,6 +1,8 @@
-package com.Server.security;
+package com.Server.service.config;
 
 import com.Server.service.CustomUserDetailsService;
+import com.Server.service.instant.JWTAuthFilter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

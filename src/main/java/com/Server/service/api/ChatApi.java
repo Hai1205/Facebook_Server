@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,23 +60,18 @@ public class ChatApi {
 
             ConversationDTO conversationDTO = null;
             if (conversation != null) {
-                System.out.println("conversation not null: " + conversation);
                 conversation.setParticipants(participantRepository.findByConversationId(conversation.getId()));
                 conversationDTO = ConservationMapper.mapEntityToDTOFull(conversation);
             } else {
-                System.out.println("conversation null: " + conversation);
                 Conversation newConversation = new Conversation();
                 newConversation.setName("Chat between " + user.getFullName() + " and " + otherUser.getFullName());
                 conversationRepository.save(newConversation);
-                
+
                 Participant participantUser = createParticipant(user, newConversation);
                 Participant participantOtherUser = createParticipant(otherUser, newConversation);
                 newConversation.setParticipants(Arrays.asList(participantUser, participantOtherUser));
-                
+
                 conversationRepository.save(newConversation);
-                System.out.println("participantUser: " + participantUser);
-                System.out.println("participantOtherUser: " + participantOtherUser);
-                System.out.println("newConversation: " + newConversation);
 
                 conversationDTO = ConservationMapper.mapEntityToDTOFull(newConversation);
             }
@@ -98,34 +92,6 @@ public class ChatApi {
         return response;
     }
 
-    private Response addUserToConversation(Conversation conversation, User user) {
-        Response response = new Response();
-
-        try {
-            participantRepository.existsByConversationIdAndUserId(conversation.getId(), user.getId())
-                    .orElseThrow(() -> new OurException("Participant not found"));
-
-            Participant participant = new Participant();
-            participant.setConversation(conversation);
-            participant.setUser(user);
-
-            participantRepository.save(participant);
-
-            response.setStatusCode(200);
-            response.setMessage("get conversations for user successfully");
-        } catch (OurException e) {
-            response.setStatusCode(400);
-            response.setMessage(e.getMessage());
-            System.out.println(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage(e.getMessage());
-            System.out.println(e.getMessage());
-        }
-
-        return response;
-    }
-    
     private Participant createParticipant(User user, Conversation conversation) {
         try {
             Participant participant = new Participant(user, conversation);
@@ -385,7 +351,7 @@ public class ChatApi {
             for (String userId : userIds) {
                 User user = userRepository.findById(userId)
                         .orElseThrow(() -> new OurException("not found: " + userId));
-                addUserToConversation(savedGroup, user);
+                createParticipant(user, savedGroup);
             }
             savedGroup.setParticipants(participantRepository.findByConversationId(savedGroup.getId()));
 
@@ -419,7 +385,7 @@ public class ChatApi {
 
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new OurException("User not found"));
-            addUserToConversation(group, user);
+            createParticipant(user, group);
 
             response.setStatusCode(200);
             response.setMessage("get conversation for user successfully");

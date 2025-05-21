@@ -1,4 +1,4 @@
-package com.Server.utils;
+package com.Server.service.instant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,6 @@ public class OnlineUserTracker {
     }
 
     public Set<String> getOnlineUsers() {
-        // Trả về bản sao để tránh lỗi ConcurrentModificationException
         Set<String> onlineUsersCopy = new HashSet<>(onlineUsers);
         log.debug("Retrieved online users list, count: {}", onlineUsersCopy.size());
         return onlineUsersCopy;

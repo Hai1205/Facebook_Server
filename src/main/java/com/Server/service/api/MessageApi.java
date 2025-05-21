@@ -3,6 +3,7 @@ package com.Server.service.api;
 import com.Server.dto.*;
 import com.Server.entity.*;
 import com.Server.repo.*;
+import com.Server.service.config.AwsS3Config;
 import com.Server.utils.mapper.MessageMapper;
 import com.Server.utils.mapper.UserMapper;
 import com.Server.exception.OurException;
@@ -15,11 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import com.Server.entity.Message.MessageType;
 import com.Server.entity.Message.MessageStatus;
-import java.util.UUID;
-import java.util.Date;
-import org.springframework.beans.factory.annotation.Value;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,11 +46,8 @@ public class MessageApi {
         @Autowired
         private SimpMessagingTemplate messagingTemplate;
 
-        @Value("${aws.s3.bucket.name}")
-        private String bucketName;
-
         @Autowired
-        private AmazonS3 amazonS3;
+        private AwsS3Config awsS3Config;
 
         @Transactional(rollbackFor = Exception.class)
         public Response sendMessage(MessageDTO messageDTO) {
@@ -350,7 +343,6 @@ public class MessageApi {
                         participantRepository.findByConversationIdAndUserId(conversationId, senderId)
                                         .orElseThrow(() -> new OurException("User is not in conversation"));
 
-                        // Tạo message mới
                         Message message = new Message();
                         message.setSender(sender);
                         message.setConversation(conversation);
@@ -358,32 +350,20 @@ public class MessageApi {
                         message.setType(MessageType.FILE);
                         message.setRead(false);
 
-                        // Xử lý file
                         if (files != null && files.length > 0) {
-                                MultipartFile file = files[0]; // Chỉ xử lý 1 file
-                                String fileKey = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+                                MultipartFile file = files[0];
+                                String fileUrl = awsS3Config.saveFileToS3(file);
 
-                                // Lưu file lên S3
-                                ObjectMetadata metadata = new ObjectMetadata();
-                                metadata.setContentType(file.getContentType());
-                                metadata.setContentLength(file.getSize());
-
-                                amazonS3.putObject(bucketName, fileKey, file.getInputStream(), metadata);
-                                String fileUrl = amazonS3.getUrl(bucketName, fileKey).toString();
-
-                                // Cập nhật thông tin file cho message
                                 message.setFileUrl(fileUrl);
                                 message.setFileName(file.getOriginalFilename());
                                 message.setFileSize(file.getSize());
                                 message.setMimeType(file.getContentType());
                         }
 
-                        // Lưu message
                         Message savedMessage = messageRepository.save(message);
                         conversation.setUpdatedAt(savedMessage.getCreatedAt());
                         conversationRepository.save(conversation);
 
-                        // Gửi message qua WebSocket
                         MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
                         messagingTemplate.convertAndSend(
                                         "/topic/conversation." + conversation.getId(),
@@ -420,7 +400,6 @@ public class MessageApi {
                         participantRepository.findByConversationIdAndUserId(conversationId, senderId)
                                         .orElseThrow(() -> new OurException("User is not in conversation"));
 
-                        // Tạo message mới
                         Message message = new Message();
                         message.setSender(sender);
                         message.setConversation(conversation);
@@ -428,37 +407,24 @@ public class MessageApi {
                         message.setType(MessageType.IMAGE);
                         message.setRead(false);
 
-                        // Xử lý hình ảnh
                         List<String> imageUrls = new ArrayList<>();
                         if (images != null && images.length > 0) {
                                 for (MultipartFile image : images) {
-                                        String imageKey = UUID.randomUUID().toString() + "-"
-                                                        + image.getOriginalFilename();
-
-                                        // Chỉ chấp nhận hình ảnh
                                         if (!image.getContentType().startsWith("image/")) {
                                                 throw new OurException("File must be an image");
                                         }
 
-                                        // Lưu hình ảnh lên S3
-                                        ObjectMetadata metadata = new ObjectMetadata();
-                                        metadata.setContentType(image.getContentType());
-                                        metadata.setContentLength(image.getSize());
-
-                                        amazonS3.putObject(bucketName, imageKey, image.getInputStream(), metadata);
-                                        String imageUrl = amazonS3.getUrl(bucketName, imageKey).toString();
+                                        String imageUrl = awsS3Config.saveFileToS3(image);
                                         imageUrls.add(imageUrl);
                                 }
 
                                 message.setImageUrls(imageUrls);
                         }
 
-                        // Lưu message
                         Message savedMessage = messageRepository.save(message);
                         conversation.setUpdatedAt(savedMessage.getCreatedAt());
                         conversationRepository.save(conversation);
 
-                        // Gửi message qua WebSocket
                         MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
                         messagingTemplate.convertAndSend(
                                         "/topic/conversation." + conversation.getId(),
@@ -488,16 +454,13 @@ public class MessageApi {
                         Message message = messageRepository.findById(messageId)
                                         .orElseThrow(() -> new OurException("Message not found"));
 
-                        // Chỉ có người gửi mới có thể xóa tin nhắn
                         if (!message.getSender().getId().equals(userId)) {
                                 throw new OurException("Only the sender can delete the message");
                         }
 
-                        // Đánh dấu tin nhắn đã bị xóa
                         message.setStatus(MessageStatus.DELETED);
                         messageRepository.save(message);
 
-                        // Gửi thông báo xóa tin nhắn qua WebSocket
                         MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(message);
                         messagingTemplate.convertAndSend(
                                         "/topic/conversation." + message.getConversation().getId() + ".delete",

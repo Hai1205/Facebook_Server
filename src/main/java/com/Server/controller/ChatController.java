@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import com.Server.dto.Response;
 import com.Server.exception.OurException;
 import com.Server.service.api.ChatApi;
-import com.Server.utils.OnlineUserTracker;
+import com.Server.service.instant.OnlineUserTracker;
 
 import java.util.List;
 import java.util.Map;
