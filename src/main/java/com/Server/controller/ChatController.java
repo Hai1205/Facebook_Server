@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import com.Server.dto.Response;
 import com.Server.exception.OurException;
 import com.Server.service.api.ChatApi;
-import com.Server.handler.SocketIOHandler;
+import com.Server.utils.OnlineUserTracker;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -19,7 +20,7 @@ public class ChatController {
     private ChatApi chatApi;
 
     @Autowired
-    private SocketIOHandler socketIOHandler;
+    private OnlineUserTracker onlineUserTracker;
 
     @GetMapping("/get-or-create-conversation/{userId}/{otherUserId}")
     public ResponseEntity<Response> getOrCreateConversation(
@@ -27,28 +28,6 @@ public class ChatController {
             @PathVariable String otherUserId) {
 
         Response response = chatApi.getOrCreateConversation(userId, otherUserId);
-
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    @GetMapping("/get-online-users")
-    public ResponseEntity<Response> getOnlineUsers() {
-        Response response = new Response();
-
-        try {
-            List<String> onlineUsers = socketIOHandler.getOnlineUserIds();
-
-            response.setStatusCode(200);
-            response.setMessage("Lấy danh sách người dùng đang online thành công");
-
-            // Đặt danh sách người dùng vào một trường mới của response
-            Map<String, Object> data = Map.of("onlineUsers", onlineUsers);
-            response.setData(data);
-
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Lỗi khi lấy danh sách người dùng đang online: " + e.getMessage());
-        }
 
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
@@ -137,6 +116,68 @@ public class ChatController {
             @PathVariable String userId) {
         Response response = chatApi.deleteUserFromGroup(conversationId, userId);
 
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping("/online-users")
+    public ResponseEntity<Response> getOnlineUsers() {
+        Response response = new Response();
+        try {
+            Set<String> onlineUsers = onlineUserTracker.getOnlineUsers();
+            response.setStatusCode(200);
+            response.setMessage("Online users retrieved successfully");
+            response.setData(Map.of("onlineUsers", onlineUsers, "count", onlineUsers.size()));
+
+            org.slf4j.LoggerFactory.getLogger(ChatController.class)
+                    .info("Retrieved {} online users", onlineUsers.size());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error retrieving online users: " + e.getMessage());
+
+            org.slf4j.LoggerFactory.getLogger(ChatController.class)
+                    .error("Error retrieving online users", e);
+        }
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping("/is-user-online/{userId}")
+    public ResponseEntity<Response> isUserOnline(@PathVariable String userId) {
+        Response response = new Response();
+        try {
+            if (userId == null || userId.trim().isEmpty()) {
+                throw new IllegalArgumentException("User ID cannot be empty");
+            }
+
+            boolean isOnline = onlineUserTracker.isUserOnline(userId);
+            response.setStatusCode(200);
+            response.setMessage("User online status retrieved successfully");
+            response.setData(Map.of("userId", userId, "online", isOnline));
+
+            org.slf4j.LoggerFactory.getLogger(ChatController.class)
+                    .debug("User {} is online: {}", userId, isOnline);
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error retrieving user online status: " + e.getMessage());
+
+            org.slf4j.LoggerFactory.getLogger(ChatController.class)
+                    .error("Error checking online status for user {}: {}", userId, e.getMessage());
+        }
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @PostMapping("/chat-ai")
+    public ResponseEntity<Response> chatAI(@RequestBody String prompt) {
+        Response response = new Response();
+        try {
+            // Xử lý prompt cho chatbot AI hoặc gọi dịch vụ bên ngoài
+            String aiResponse = "Đây là phản hồi từ AI cho: " + prompt;
+            response.setStatusCode(200);
+            response.setMessage("AI response generated successfully");
+            response.setData(Map.of("response", aiResponse));
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error generating AI response: " + e.getMessage());
+        }
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,24 +56,30 @@ public class ChatApi {
             User otherUser = userRepository.findById(otherUserId)
                     .orElseThrow(() -> new OurException("Other user not found"));
 
-            Optional<Conversation> existingConversation = conversationRepository.findConversationBetweenUsers(userId,
-                    otherUserId);
+            Conversation conversation = conversationRepository.findConversationBetweenUsers(userId,
+                    otherUserId).orElse(null);
 
             ConversationDTO conversationDTO = null;
-            if (existingConversation.isPresent()) {
-                Conversation conversation = existingConversation.get();
+            if (conversation != null) {
+                System.out.println("conversation not null: " + conversation);
                 conversation.setParticipants(participantRepository.findByConversationId(conversation.getId()));
                 conversationDTO = ConservationMapper.mapEntityToDTOFull(conversation);
             } else {
+                System.out.println("conversation null: " + conversation);
                 Conversation newConversation = new Conversation();
                 newConversation.setName("Chat between " + user.getFullName() + " and " + otherUser.getFullName());
-                newConversation.setIsGroupChat(false);
-                Conversation savedConversation = conversationRepository.save(newConversation);
-                addUserToConversation(savedConversation, user);
-                addUserToConversation(savedConversation, otherUser);
-                savedConversation
-                        .setParticipants(participantRepository.findByConversationId(savedConversation.getId()));
-                conversationDTO = ConservationMapper.mapEntityToDTOFull(savedConversation);
+                conversationRepository.save(newConversation);
+                
+                Participant participantUser = createParticipant(user, newConversation);
+                Participant participantOtherUser = createParticipant(otherUser, newConversation);
+                newConversation.setParticipants(Arrays.asList(participantUser, participantOtherUser));
+                
+                conversationRepository.save(newConversation);
+                System.out.println("participantUser: " + participantUser);
+                System.out.println("participantOtherUser: " + participantOtherUser);
+                System.out.println("newConversation: " + newConversation);
+
+                conversationDTO = ConservationMapper.mapEntityToDTOFull(newConversation);
             }
 
             response.setStatusCode(200);
@@ -117,6 +124,16 @@ public class ChatApi {
         }
 
         return response;
+    }
+    
+    private Participant createParticipant(User user, Conversation conversation) {
+        try {
+            Participant participant = new Participant(user, conversation);
+            return participantRepository.save(participant);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
 
     @Transactional

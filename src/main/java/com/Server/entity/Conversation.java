@@ -13,6 +13,9 @@ import java.util.List;
 @Data
 @Document(collection = "conversations")
 public class Conversation {
+    public Conversation() {
+    }
+
     @Id
     private String id;
 
@@ -37,7 +40,7 @@ public class Conversation {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", isGroupChat=" + isGroupChat +
-                ", participants=" + participants +
+                ", participants size=" + (participants != null ? participants.size() : 0) +
                 ", unreadCount=" + unreadCount +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +

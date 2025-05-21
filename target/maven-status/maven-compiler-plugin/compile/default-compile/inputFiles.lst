@@ -39,7 +39,6 @@ C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebo
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\entity\Story.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\entity\User.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\exception\OurException.java
-C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\handler\SocketIOHandler.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\repo\BioRepository.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\repo\CommentRepository.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\repo\ConversationRepository.java
@@ -59,7 +58,6 @@ C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebo
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\AuthApi.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\BioApi.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\ChatApi.java
-C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\GeminiChatApi.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\MessageApi.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\NotiApi.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\PostsApi.java
@@ -67,10 +65,9 @@ C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebo
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\api\UsersApi.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\config\AwsS3Config.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\config\MailConfig.java
-C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\config\SocketIOConfig.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\config\WebSocketConfig.java
+C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\config\WebSocketEventListener.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\service\CustomUserDetailsService.java
-C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\constant\ApiMessage.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\JWTUtils.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\mapper\BioMapper.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\mapper\CommentMapper.java
@@ -84,4 +81,5 @@ C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebo
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\mapper\ReportMapper.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\mapper\StoryMapper.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\mapper\UserMapper.java
+C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\OnlineUserTracker.java
 C:\Users\ASUS\OneDrive\Máy tính\HocTap\Java\Springboot\project\Facebook\Facebook_Server\src\main\java\com\Server\utils\Utils.java

@@ -11,6 +11,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
@@ -44,6 +45,14 @@ public class AwsS3Config {
                 .build();
 
         bucketUrl = "https://" + bucketName + ".s3.amazonaws.com/";
+    }
+
+    @Bean
+    public AmazonS3 amazonS3() {
+        if (s3Client == null) {
+            initializeS3Client();
+        }
+        return s3Client;
     }
 
     public String saveFileToS3(MultipartFile file) {

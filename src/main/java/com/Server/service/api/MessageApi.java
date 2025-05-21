@@ -12,6 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+import com.Server.entity.Message.MessageType;
+import com.Server.entity.Message.MessageStatus;
+import java.util.UUID;
+import java.util.Date;
+import org.springframework.beans.factory.annotation.Value;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +49,12 @@ public class MessageApi {
 
         @Autowired
         private SimpMessagingTemplate messagingTemplate;
+
+        @Value("${aws.s3.bucket.name}")
+        private String bucketName;
+
+        @Autowired
+        private AmazonS3 amazonS3;
 
         @Transactional(rollbackFor = Exception.class)
         public Response sendMessage(MessageDTO messageDTO) {
@@ -245,12 +259,12 @@ public class MessageApi {
                         Pageable pageable = PageRequest.of(0, 10);
                         List<Message> latestMessages = messageRepository.findLatestMessagesByUserId(userId, pageable);
 
-                        List<MessageResponseDTO> latestMessagesDTO = MessageMapper
+                        List<MessageResponseDTO> messageResponsesDTO = MessageMapper
                                         .mapListEntityToListDTOFull(latestMessages);
 
                         response.setStatusCode(200);
-                        response.setMessage("get contacts for user successfully");
-                        response.setMessageResponses(latestMessagesDTO);
+                        response.setMessage("get latest messages for user successfully");
+                        response.setMessageResponses(messageResponsesDTO);
                 } catch (OurException e) {
                         response.setStatusCode(400);
                         response.setMessage(e.getMessage());
@@ -274,7 +288,7 @@ public class MessageApi {
                         Long count = messageRepository.countUnreadMessages(userId);
 
                         response.setStatusCode(200);
-                        response.setMessage("get contacts for user successfully");
+                        response.setMessage("count unread messages for user successfully");
                         response.setUnRead(count);
                 } catch (OurException e) {
                         response.setStatusCode(400);
@@ -307,7 +321,7 @@ public class MessageApi {
                         messageRepository.markMessagesAsReadInConversation(conversation.getId(), receiverId);
 
                         response.setStatusCode(200);
-                        response.setMessage("get contacts for user successfully");
+                        response.setMessage("mark messages as read successfully");
                 } catch (OurException e) {
                         response.setStatusCode(400);
                         response.setMessage(e.getMessage());
@@ -316,6 +330,189 @@ public class MessageApi {
                         response.setStatusCode(500);
                         response.setMessage(e.getMessage());
                         System.out.println(e.getMessage());
+                }
+
+                return response;
+        }
+
+        @Transactional(rollbackFor = Exception.class)
+        public Response sendMessageWithFiles(String senderId, String conversationId, String content,
+                        MultipartFile[] files) {
+                Response response = new Response();
+
+                try {
+                        User sender = userRepository.findById(senderId)
+                                        .orElseThrow(() -> new OurException("Sender not found"));
+
+                        Conversation conversation = conversationRepository.findById(conversationId)
+                                        .orElseThrow(() -> new OurException("Conversation not found"));
+
+                        participantRepository.findByConversationIdAndUserId(conversationId, senderId)
+                                        .orElseThrow(() -> new OurException("User is not in conversation"));
+
+                        // Tạo message mới
+                        Message message = new Message();
+                        message.setSender(sender);
+                        message.setConversation(conversation);
+                        message.setContent(content);
+                        message.setType(MessageType.FILE);
+                        message.setRead(false);
+
+                        // Xử lý file
+                        if (files != null && files.length > 0) {
+                                MultipartFile file = files[0]; // Chỉ xử lý 1 file
+                                String fileKey = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+
+                                // Lưu file lên S3
+                                ObjectMetadata metadata = new ObjectMetadata();
+                                metadata.setContentType(file.getContentType());
+                                metadata.setContentLength(file.getSize());
+
+                                amazonS3.putObject(bucketName, fileKey, file.getInputStream(), metadata);
+                                String fileUrl = amazonS3.getUrl(bucketName, fileKey).toString();
+
+                                // Cập nhật thông tin file cho message
+                                message.setFileUrl(fileUrl);
+                                message.setFileName(file.getOriginalFilename());
+                                message.setFileSize(file.getSize());
+                                message.setMimeType(file.getContentType());
+                        }
+
+                        // Lưu message
+                        Message savedMessage = messageRepository.save(message);
+                        conversation.setUpdatedAt(savedMessage.getCreatedAt());
+                        conversationRepository.save(conversation);
+
+                        // Gửi message qua WebSocket
+                        MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
+                        messagingTemplate.convertAndSend(
+                                        "/topic/conversation." + conversation.getId(),
+                                        messageResponseDTO);
+
+                        response.setStatusCode(200);
+                        response.setMessage("Message with file sent successfully");
+                        response.setMessageResponse(messageResponseDTO);
+                } catch (OurException e) {
+                        response.setStatusCode(400);
+                        response.setMessage(e.getMessage());
+                        log.error("Error sending message with files: {}", e.getMessage());
+                } catch (Exception e) {
+                        response.setStatusCode(500);
+                        response.setMessage("Internal server error");
+                        log.error("Error sending message with files", e);
+                }
+
+                return response;
+        }
+
+        @Transactional(rollbackFor = Exception.class)
+        public Response sendMessageWithImages(String senderId, String conversationId, String content,
+                        MultipartFile[] images) {
+                Response response = new Response();
+
+                try {
+                        User sender = userRepository.findById(senderId)
+                                        .orElseThrow(() -> new OurException("Sender not found"));
+
+                        Conversation conversation = conversationRepository.findById(conversationId)
+                                        .orElseThrow(() -> new OurException("Conversation not found"));
+
+                        participantRepository.findByConversationIdAndUserId(conversationId, senderId)
+                                        .orElseThrow(() -> new OurException("User is not in conversation"));
+
+                        // Tạo message mới
+                        Message message = new Message();
+                        message.setSender(sender);
+                        message.setConversation(conversation);
+                        message.setContent(content);
+                        message.setType(MessageType.IMAGE);
+                        message.setRead(false);
+
+                        // Xử lý hình ảnh
+                        List<String> imageUrls = new ArrayList<>();
+                        if (images != null && images.length > 0) {
+                                for (MultipartFile image : images) {
+                                        String imageKey = UUID.randomUUID().toString() + "-"
+                                                        + image.getOriginalFilename();
+
+                                        // Chỉ chấp nhận hình ảnh
+                                        if (!image.getContentType().startsWith("image/")) {
+                                                throw new OurException("File must be an image");
+                                        }
+
+                                        // Lưu hình ảnh lên S3
+                                        ObjectMetadata metadata = new ObjectMetadata();
+                                        metadata.setContentType(image.getContentType());
+                                        metadata.setContentLength(image.getSize());
+
+                                        amazonS3.putObject(bucketName, imageKey, image.getInputStream(), metadata);
+                                        String imageUrl = amazonS3.getUrl(bucketName, imageKey).toString();
+                                        imageUrls.add(imageUrl);
+                                }
+
+                                message.setImageUrls(imageUrls);
+                        }
+
+                        // Lưu message
+                        Message savedMessage = messageRepository.save(message);
+                        conversation.setUpdatedAt(savedMessage.getCreatedAt());
+                        conversationRepository.save(conversation);
+
+                        // Gửi message qua WebSocket
+                        MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(savedMessage);
+                        messagingTemplate.convertAndSend(
+                                        "/topic/conversation." + conversation.getId(),
+                                        messageResponseDTO);
+
+                        response.setStatusCode(200);
+                        response.setMessage("Message with image sent successfully");
+                        response.setMessageResponse(messageResponseDTO);
+                } catch (OurException e) {
+                        response.setStatusCode(400);
+                        response.setMessage(e.getMessage());
+                        log.error("Error sending message with images: {}", e.getMessage());
+                } catch (Exception e) {
+                        response.setStatusCode(500);
+                        response.setMessage("Internal server error");
+                        log.error("Error sending message with images", e);
+                }
+
+                return response;
+        }
+
+        @Transactional
+        public Response markMessageAsDeleted(String messageId, String userId) {
+                Response response = new Response();
+
+                try {
+                        Message message = messageRepository.findById(messageId)
+                                        .orElseThrow(() -> new OurException("Message not found"));
+
+                        // Chỉ có người gửi mới có thể xóa tin nhắn
+                        if (!message.getSender().getId().equals(userId)) {
+                                throw new OurException("Only the sender can delete the message");
+                        }
+
+                        // Đánh dấu tin nhắn đã bị xóa
+                        message.setStatus(MessageStatus.DELETED);
+                        messageRepository.save(message);
+
+                        // Gửi thông báo xóa tin nhắn qua WebSocket
+                        MessageResponseDTO messageResponseDTO = MessageMapper.mapEntityToResponseDTOFull(message);
+                        messagingTemplate.convertAndSend(
+                                        "/topic/conversation." + message.getConversation().getId() + ".delete",
+                                        messageResponseDTO);
+
+                        response.setStatusCode(200);
+                        response.setMessage("Message marked as deleted successfully");
+                } catch (OurException e) {
+                        response.setStatusCode(400);
+                        response.setMessage(e.getMessage());
+                        log.error("Error marking message as deleted: {}", e.getMessage());
+                } catch (Exception e) {
+                        response.setStatusCode(500);
+                        response.setMessage("Internal server error");
+                        log.error("Error marking message as deleted", e);
                 }
 
                 return response;

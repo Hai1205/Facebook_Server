@@ -22,6 +22,21 @@ public class MessageMapper {
         messageResponseDTO.setCreatedAt(message.getCreatedAt());
         messageResponseDTO.setIsRead(message.isRead());
 
+        // Map các trường mới
+        messageResponseDTO.setType(message.getType());
+        messageResponseDTO.setStatus(message.getStatus());
+
+        // Thông tin file
+        messageResponseDTO.setFileUrl(message.getFileUrl());
+        messageResponseDTO.setFileName(message.getFileName());
+        messageResponseDTO.setFileSize(message.getFileSize());
+        messageResponseDTO.setMimeType(message.getMimeType());
+
+        // Danh sách URL hình ảnh
+        if (message.getImageUrls() != null) {
+            messageResponseDTO.setImageUrls(message.getImageUrls());
+        }
+
         return messageResponseDTO;
     }
 

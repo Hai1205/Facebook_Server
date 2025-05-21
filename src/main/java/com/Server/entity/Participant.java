@@ -12,6 +12,14 @@ import java.time.Instant;
 @Data
 @Document(collection = "participants")
 public class Participant {
+    public Participant(User user, Conversation conversation) {
+        this.user = user;
+        this.conversation = conversation;
+    }
+
+    public Participant() {
+    }
+
     @Id
     private String id;
 
@@ -35,7 +43,7 @@ public class Participant {
     public String toString() {
         return "ConversationParticipant{" +
                 "id='" + id + '\'' +
-                ", conversation=" + conversation +
+                ", conversation.id=" + (conversation != null ? conversation.getId() : null) +
                 ", user=" + user +
                 ", joinedAt=" + joinedAt +
                 ", leftAt=" + leftAt +

@@ -8,7 +8,6 @@ import com.Server.service.config.MailConfig;
 import com.Server.utils.JWTUtils;
 import com.Server.utils.Utils;
 import com.Server.utils.mapper.UserMapper;
-import com.Server.handler.SocketIOHandler;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -48,9 +47,6 @@ public class AuthApi {
 
     @Autowired
     private MailConfig mailConfig;
-
-    @Autowired
-    private SocketIOHandler socketIOHandler;
 
     public Response register(String email, String password, String gender, String fullName, String dateOfBirth) {
         Response response = new Response();
@@ -124,7 +120,6 @@ public class AuthApi {
                 Map<String, String> userInfo = new HashMap<>();
                 userInfo.put("email", user.getEmail());
                 userInfo.put("fullName", user.getFullName());
-                socketIOHandler.logUserLoginAndConnection(user.getId(), userInfo);
 
                 response.setMessage("Login successfully");
                 response.setToken(token);
@@ -253,7 +248,6 @@ public class AuthApi {
             Map<String, String> userInfo = new HashMap<>();
             userInfo.put("email", user.getEmail());
             userInfo.put("fullName", user.getFullName());
-            socketIOHandler.logUserLoginAndConnection(user.getId(), userInfo);
 
             response.setStatusCode(200);
             response.setMessage("Login successfully");
