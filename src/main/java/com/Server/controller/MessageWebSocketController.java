@@ -52,22 +52,18 @@ public class MessageWebSocketController {
         if (userId != null) {
             log.info("User connected via explicit message: {}", userId);
 
-            // Lưu userId vào session để sử dụng trong các event listener
             if (headerAccessor.getSessionAttributes() != null) {
                 headerAccessor.getSessionAttributes().put("userId", userId);
             }
 
-            // Thêm user vào danh sách online
             onlineUserTracker.addUser(userId);
 
-            // Gửi thông báo cho tất cả người dùng
             Map<String, Object> statusUpdate = Map.of(
                     "userId", userId,
                     "online", true,
                     "timestamp", System.currentTimeMillis());
             messagingTemplate.convertAndSend("/topic/user.status", statusUpdate);
 
-            // Gửi danh sách người dùng đang online về cho client vừa kết nối
             Set<String> onlineUsers = onlineUserTracker.getOnlineUsers();
             messagingTemplate.convertAndSendToUser(headerAccessor.getSessionId(),
                     "/queue/online-users", onlineUsers);
@@ -85,10 +81,8 @@ public class MessageWebSocketController {
     private void processUserDisconnect(String userId) {
         log.info("User disconnected: {}", userId);
 
-        // Xóa user khỏi danh sách online
         onlineUserTracker.removeUser(userId);
 
-        // Gửi thông báo cho tất cả người dùng
         Map<String, Object> statusUpdate = Map.of(
                 "userId", userId,
                 "online", false,
@@ -142,7 +136,6 @@ public class MessageWebSocketController {
                             messageDTO.getSender().getId())
                     .orElseThrow(() -> new OurException("User is not in conversation"));
 
-            // Lưu tin nhắn vào cơ sở dữ liệu
             Response response = messageApi.sendMessage(messageDTO);
             MessageResponseDTO storedMessage = response.getMessageResponse();
 
@@ -152,9 +145,8 @@ public class MessageWebSocketController {
                 return storedMessage;
             }
 
-            // Nếu không lưu được, vẫn trả về message để hiển thị
             MessageResponseDTO responseDTO = new MessageResponseDTO();
-            responseDTO.setConversationId(conversationId);
+            responseDTO.setConversation(messageDTO.getConversation());
             responseDTO.setSender(messageDTO.getSender());
             responseDTO.setContent(messageDTO.getContent());
             responseDTO.setIsRead(false);
@@ -192,7 +184,6 @@ public class MessageWebSocketController {
             log.debug("Marking messages as read: conversation={}, user={}", conversationId, userId);
             messageApi.markMessagesAsRead(conversationId, userId);
 
-            // Gửi thông báo đã đọc đến tất cả người dùng trong cuộc trò chuyện
             Map<String, Object> readUpdate = Map.of(
                     "conversationId", conversationId,
                     "userId", userId,

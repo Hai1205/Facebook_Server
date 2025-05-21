@@ -16,7 +16,7 @@ import java.util.List;
 public class MessageResponseDTO {
     private String id;
 
-    private String conversationId;
+    private ConversationDTO conversation;
 
     private UserDTO sender;
 
@@ -24,19 +24,15 @@ public class MessageResponseDTO {
 
     private String content;
 
-    // Loại tin nhắn
     private MessageType type = MessageType.TEXT;
 
-    // Danh sách URL hình ảnh
     private List<String> imageUrls = new ArrayList<>();
 
-    // Thông tin file
     private String fileUrl;
     private String fileName;
     private Long fileSize;
     private String mimeType;
 
-    // Trạng thái tin nhắn
     private MessageStatus status = MessageStatus.SENT;
 
     private Instant createdAt;

@@ -9,9 +9,19 @@ import com.Server.entity.Conversation;
 public class ConservationMapper {
     public static ConversationDTO mapEntityToDTOFull(Conversation conversation) {
         ConversationDTO participantDTO = mapEntityToDTO(conversation);
-        participantDTO.setLastMessage(MessageMapper.mapEntityToResponseDTOFull(conversation.getLastMessage()));
 
-        participantDTO.setParticipants(ParticipantMapper.mapListEntityToListDTOFull(conversation.getParticipants()));
+        if (conversation.getLastMessage() != null) {
+            participantDTO.setLastMessage(MessageMapper.mapEntityToResponseDTOFull(conversation.getLastMessage()));
+        } else {
+            participantDTO.setLastMessage(null);
+        }
+
+        if (conversation.getParticipants() != null) {
+            participantDTO
+                    .setParticipants(ParticipantMapper.mapListEntityToListDTOFull(conversation.getParticipants()));
+        } else {
+            participantDTO.setParticipants(null);
+        }
 
         return participantDTO;
     }
@@ -21,7 +31,7 @@ public class ConservationMapper {
                 .map(ConservationMapper::mapEntityToDTOFull)
                 .collect(Collectors.toList());
     }
-    
+
     public static ConversationDTO mapEntityToDTO(Conversation conversation) {
         ConversationDTO participantDTO = new ConversationDTO();
         participantDTO.setId(conversation.getId());

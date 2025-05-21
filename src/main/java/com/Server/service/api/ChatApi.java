@@ -22,10 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Service
 public class ChatApi {
@@ -114,6 +114,7 @@ public class ChatApi {
             List<Participant> userParticipants = participantRepository.findByUserId(userId);
 
             List<String> conversationIds = userParticipants.stream()
+                    .filter(participant -> participant.getConversation() != null)
                     .map(participant -> participant.getConversation().getId())
                     .distinct()
                     .collect(Collectors.toList());
@@ -123,7 +124,16 @@ public class ChatApi {
                 conversationRepository.findById(convId).ifPresent(conversations::add);
             }
 
-            conversations.sort((c1, c2) -> c2.getUpdatedAt().compareTo(c1.getUpdatedAt()));
+            conversations.sort((c1, c2) -> {
+                if (c1.getUpdatedAt() == null && c2.getUpdatedAt() == null) {
+                    return 0;
+                } else if (c1.getUpdatedAt() == null) {
+                    return 1;
+                } else if (c2.getUpdatedAt() == null) {
+                    return -1;
+                }
+                return c2.getUpdatedAt().compareTo(c1.getUpdatedAt());
+            });
 
             List<ConversationDTO> conversationsDTO = new ArrayList<>();
             for (Conversation conversation : conversations) {
@@ -132,8 +142,9 @@ public class ChatApi {
                             .findByConversationId(conversation.getId());
                     if (participants.size() == 2) {
                         String otherUserId = participants.stream()
+                                .filter(cp -> cp.getUser() != null)
                                 .map(cp -> cp.getUser().getId())
-                                .filter(id -> !id.equals(userId))
+                                .filter(id -> id != null && !id.equals(userId))
                                 .findFirst().orElse(null);
 
                         if (otherUserId != null) {
@@ -146,10 +157,23 @@ public class ChatApi {
                 }
 
                 ConversationDTO conversationDTO = ConservationMapper.mapEntityToDTOFull(conversation);
-                List<Participant> participants = participantRepository
-                        .findByConversationId(conversation.getId());
-                List<ParticipantDTO> participantsDTO = ParticipantMapper.mapListEntityToListDTOFull(participants);
-                conversationDTO.setParticipants(participantsDTO);
+
+                try {
+                    List<Participant> participants = participantRepository
+                            .findByConversationId(conversation.getId());
+
+                    if (participants != null) {
+                        List<ParticipantDTO> participantsDTO = ParticipantMapper
+                                .mapListEntityToListDTOFull(participants);
+                        conversationDTO.setParticipants(participantsDTO);
+                    } else {
+                        conversationDTO.setParticipants(new ArrayList<>());
+                    }
+                } catch (Exception e) {
+                    System.out.println("Lỗi khi lấy participants cho conversation " + conversation.getId() + ": "
+                            + e.getMessage());
+                    conversationDTO.setParticipants(new ArrayList<>());
+                }
 
                 conversationsDTO.add(conversationDTO);
             }
@@ -190,8 +214,9 @@ public class ChatApi {
                 List<Participant> participants = participantRepository.findByConversationId(conversationId);
                 if (participants.size() == 2) {
                     String otherUserId = participants.stream()
+                            .filter(cp -> cp.getUser() != null)
                             .map(cp -> cp.getUser().getId())
-                            .filter(id -> !id.equals(userId))
+                            .filter(id -> id != null && !id.equals(userId))
                             .findFirst().orElse(null);
 
                     if (otherUserId != null) {
@@ -207,7 +232,20 @@ public class ChatApi {
             Pageable pageable = PageRequest.of(page, size);
             List<Message> messages = messageRepository.findByConversationIdWithPagination(conversationId, pageable);
 
-            messageRepository.markMessagesAsReadInConversation(conversationId, userId);
+            if (messages == null) {
+                messages = new ArrayList<>();
+            }
+
+            // Lọc bỏ tin nhắn null nếu có
+            messages = messages.stream()
+                    .filter(message -> message != null)
+                    .collect(Collectors.toList());
+
+            try {
+                messageRepository.markMessagesAsReadInConversation(conversationId, userId);
+            } catch (Exception e) {
+                System.out.println("Lỗi khi đánh dấu tin nhắn đã đọc: " + e.getMessage());
+            }
 
             List<MessageResponseDTO> messageResponsesDTO = MessageMapper
                     .mapListEntityToListDTOFull(messages);
@@ -218,11 +256,12 @@ public class ChatApi {
         } catch (OurException e) {
             response.setStatusCode(400);
             response.setMessage(e.getMessage());
-            System.out.println(e.getMessage());
+            System.out.println("OurException trong getMessages: " + e.getMessage());
         } catch (Exception e) {
             response.setStatusCode(500);
-            response.setMessage(e.getMessage());
-            System.out.println(e.getMessage());
+            response.setMessage("Lỗi server: " + e.getMessage());
+            System.out.println("Exception trong getMessages: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return response;

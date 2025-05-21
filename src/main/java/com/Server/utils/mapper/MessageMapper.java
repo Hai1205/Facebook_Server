@@ -10,15 +10,11 @@ public class MessageMapper {
     public static MessageResponseDTO mapEntityToResponseDTO(Message message) {
         MessageResponseDTO messageResponseDTO = new MessageResponseDTO();
         messageResponseDTO.setId(message.getId());
-        messageResponseDTO.setConversationId(message.getConversation().getId());
-
         messageResponseDTO.setContent(message.getContent());
         messageResponseDTO.setCreatedAt(message.getCreatedAt());
         messageResponseDTO.setIsRead(message.isRead());
-
         messageResponseDTO.setType(message.getType());
         messageResponseDTO.setStatus(message.getStatus());
-
         messageResponseDTO.setFileUrl(message.getFileUrl());
         messageResponseDTO.setFileName(message.getFileName());
         messageResponseDTO.setFileSize(message.getFileSize());
@@ -36,7 +32,7 @@ public class MessageMapper {
                 .map(MessageMapper::mapEntityToResponseDTO)
                 .collect(Collectors.toList());
     }
-    
+
     public static MessageResponseDTO mapEntityToResponseDTOFull(Message message) {
         MessageResponseDTO messageResponseDTO = mapEntityToResponseDTO(message);
 
@@ -44,6 +40,12 @@ public class MessageMapper {
             messageResponseDTO.setSender(UserMapper.mapEntityToDTO(message.getSender()));
         } else {
             messageResponseDTO.setSender(null);
+        }
+
+        if (message.getConversation() != null) {
+            messageResponseDTO.setConversation(ConservationMapper.mapEntityToDTO(message.getConversation()));
+        } else {
+            messageResponseDTO.setConversation(null);
         }
 
         return messageResponseDTO;
