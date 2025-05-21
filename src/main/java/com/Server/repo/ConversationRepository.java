@@ -17,7 +17,7 @@ public interface ConversationRepository extends MongoRepository<Conversation, St
 
        Optional<Conversation> findById(String conversationId);
 
-       @Query(value = "{'participants.user.$id': ?0}", sort = "{'updatedAt': -1}")
+       @Query(value = "{'participants': {$elemMatch: {'user.$id': ObjectId(?0)}}}", sort = "{'updatedAt': -1}")
        List<Conversation> findConversationsByUserId(String userId);
 
        @Query(value = "{'isGroupChat': true}", sort = "{'_id': 1}")

@@ -111,7 +111,20 @@ public class ChatApi {
                 throw new OurException("User not found");
             }
 
-            List<Conversation> conversations = conversationRepository.findConversationsByUserId(userId);
+            List<Participant> userParticipants = participantRepository.findByUserId(userId);
+
+            List<String> conversationIds = userParticipants.stream()
+                    .map(participant -> participant.getConversation().getId())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            List<Conversation> conversations = new ArrayList<>();
+            for (String convId : conversationIds) {
+                conversationRepository.findById(convId).ifPresent(conversations::add);
+            }
+
+            conversations.sort((c1, c2) -> c2.getUpdatedAt().compareTo(c1.getUpdatedAt()));
+
             List<ConversationDTO> conversationsDTO = new ArrayList<>();
             for (Conversation conversation : conversations) {
                 if (Boolean.FALSE.equals(conversation.getIsGroupChat())) {
